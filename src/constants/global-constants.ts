@@ -1,0 +1,21 @@
+export const CONSTANT_LIST = {
+  TRUE: true,
+  FALSE: false,
+  NULL: null,
+  STATUS_CODE_OK: 200,
+  NO_CONTENT_FOUND: 204,
+  INTERNAL_SERVER_ERROR: 500,
+  FORBIDDEN_ERROR: 403,
+  NO_USER_FOUND: 404,
+  UNAUTHORIZED_REQUEST: 401,
+  BAD_REQUEST: 400,
+  STATUS_SUCCESS: 1,
+  STATUS_ERROR: 0,
+  VALIDATION_ERROR: 417,
+
+  INTERNAL_SERVER_ERROR_MESSAGE: "Internal server error!",
+  NOT_FOUND_MESSAGE: "Resource not found!",
+  AUTHORIZATION_ERROR_MESSAGE: "User Not Authorized!",
+  TOKEN_EXPIRED: "The token has been expired. Please login again.",
+  SERVER_RUNNING_GOOD: "The server is running properly.",
+};

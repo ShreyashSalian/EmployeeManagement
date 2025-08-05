@@ -8,6 +8,8 @@ import {
   sendSuccess,
 } from "../utils/function";
 
+import path from "path";
+import fs from "fs";
 import crypto from "crypto";
 import { CONSTANT_LIST } from "../constants/global-constants";
 import { User } from "../models/user.model";
@@ -80,11 +82,34 @@ export const addNewUser = asycHandler(
         department,
       } = customReq.body;
 
+      const userAlreadyExist = await User.findOne({
+        $or: [
+          {
+            email: email,
+          },
+          {
+            userName: userName,
+          },
+        ],
+      });
+      if (userAlreadyExist) {
+        return sendError(
+          res,
+          CONSTANT_LIST.STATUS_ERROR,
+          CONSTANT_LIST.BAD_REQUEST,
+          "Sorry, the user already created with given email or userName."
+        );
+      }
+
       // ✅ Accessing profileImage and proofPhoto correctly
       const profileImage = customReq.files?.profileImage?.[0]?.filename || "";
 
-      const proofImages =
+      console.log(customReq?.files?.profileImage);
+
+      const proofImagesList =
         customReq.files?.proofPhoto?.map((file) => file.filename) || [];
+      console.log(proofImagesList);
+      // return;
 
       const emailVerificationToken: string = generateEmailVerificationToken();
       await verifyEmail(email, emailVerificationToken);
@@ -95,7 +120,7 @@ export const addNewUser = asycHandler(
         email,
         password,
         profileImage, // singular
-        proofImages, // array
+        proofPhoto: proofImagesList,
         role,
         designation,
         salary,
@@ -106,13 +131,84 @@ export const addNewUser = asycHandler(
       });
 
       const userCreated = await User.findById(userCreation?._id).select(
-        "password"
+        "-password -emailVerificationToken"
       );
 
       return sendSuccess(res, 1, 201, "User created successfully", userCreated);
     } catch (err: any) {
       console.error(err);
       return sendError(res, 0, 500, "Internal server error.");
+    }
+  }
+);
+
+export const deleteMultipleProofImages = asycHandler(
+  async (
+    req: express.Request<{}, {}, { userId: string; proofPhoto: string[] }>,
+    res: express.Response
+  ): Promise<express.Response> => {
+    try {
+      const userId = req.body.userId;
+      const proofPhoto = req.body.proofPhoto;
+      if (!Array.isArray(proofPhoto) || proofPhoto.length === 0) {
+        return sendError(
+          res,
+          CONSTANT_LIST.STATUS_ERROR,
+          CONSTANT_LIST.BAD_REQUEST,
+          "Please enter the image that you want to delete."
+        );
+      }
+      const user = await User.findById(userId);
+      if (!user) {
+        return sendError(
+          res,
+          CONSTANT_LIST.STATUS_ERROR,
+          CONSTANT_LIST.BAD_REQUEST,
+          "Sorry, no user found."
+        );
+      }
+      const proofPhotoList = proofPhoto.filter((image) => {
+        user?.proofPhoto.includes(image);
+      });
+
+      if (proofPhotoList.length === 0) {
+        return sendError(
+          res,
+          CONSTANT_LIST.STATUS_ERROR,
+          CONSTANT_LIST.BAD_REQUEST,
+          "No images are there to delete."
+        );
+      }
+      const deleteProofImages = proofPhotoList.map(async (image) => {
+        const filePath = path.resolve(__dirname, "../../public/images", image);
+        try {
+          fs.unlink(filePath, (err: any) => {
+            console.log(err);
+          });
+        } catch (err: any) {
+          console.log(`Failed to delete the image`);
+        }
+      });
+      await Promise.all(deleteProofImages);
+      user.proofPhoto = user.proofPhoto.filter(
+        (image) => !proofPhotoList.includes(image)
+      );
+      await user.save({ validateBeforeSave: false });
+      return sendSuccess(
+        res,
+        CONSTANT_LIST.STATUS_SUCCESS,
+        CONSTANT_LIST.STATUS_CODE_OK,
+        "The image has been deleted successfully.",
+        null
+      );
+    } catch (err: any) {
+      console.log(err);
+      return sendError(
+        res,
+        CONSTANT_LIST.STATUS_ERROR,
+        CONSTANT_LIST.INTERNAL_SERVER_ERROR,
+        CONSTANT_LIST.INTERNAL_SERVER_ERROR_MESSAGE
+      );
     }
   }
 );

@@ -9,6 +9,7 @@ interface ProjectDocument extends Document {
   status: string;
   teamMember: Types.ObjectId[];
   department: Types.ObjectId;
+  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,6 +50,10 @@ const projectSchema = new Schema<ProjectDocument>(
     department: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

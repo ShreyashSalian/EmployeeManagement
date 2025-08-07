@@ -13,6 +13,7 @@ export interface UserBody {
   role: string;
   designation: string;
   salary: number;
+  userId: Types.ObjectId;
   joiningDate: Date;
   contactNumber: string;
   department: Types.ObjectId;

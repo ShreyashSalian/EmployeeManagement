@@ -4,6 +4,7 @@ interface DepartmentDocument extends Document {
   name: string;
   description: string;
   manager: Types.ObjectId;
+  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,6 +23,10 @@ const departmentSchema = new Schema<DepartmentDocument>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       requried: true,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

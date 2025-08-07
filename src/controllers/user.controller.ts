@@ -1,8 +1,10 @@
 import express from "express";
 import {
+  allowedFieldsByRoleForEmployee,
   asycHandler,
   CustomRequestWithFile,
   CustomRequestWithFiles,
+  filterFieldData,
   generateEmailVerificationToken,
   sendError,
   sendSuccess,
@@ -15,6 +17,8 @@ import { CONSTANT_LIST } from "../constants/global-constants";
 import { User } from "../models/user.model";
 import { verifyUser } from "../middlewares/auth.middleware";
 import { verifyEmail } from "../utils/sendMail";
+import { UserBody } from "../helpers/user.helper";
+import mongoose from "mongoose";
 
 interface CustomRequest extends express.Request {
   files?: {
@@ -201,6 +205,84 @@ export const deleteMultipleProofImages = asycHandler(
         "The image has been deleted successfully.",
         null
       );
+    } catch (err: any) {
+      console.log(err);
+      return sendError(
+        res,
+        CONSTANT_LIST.STATUS_ERROR,
+        CONSTANT_LIST.INTERNAL_SERVER_ERROR,
+        CONSTANT_LIST.INTERNAL_SERVER_ERROR_MESSAGE
+      );
+    }
+  }
+);
+
+export const updateTheUserDetail = asycHandler(
+  async (
+    req: express.Request<{}, {}, UserBody>,
+    res: express.Response
+  ): Promise<express.Response> => {
+    try {
+      const user = req.user?.userId;
+      const userDetail = await User.findById(user);
+      type Role = keyof typeof allowedFieldsByRoleForEmployee;
+      const role = userDetail?.role as Role;
+      if (!userDetail || !(role in allowedFieldsByRoleForEmployee)) {
+        return sendError(
+          res,
+          CONSTANT_LIST.STATUS_ERROR,
+          CONSTANT_LIST.BAD_REQUEST,
+          "Invalid role."
+        );
+      }
+      const allowedFields = allowedFieldsByRoleForEmployee[role];
+      const updateData = filterFieldData(req.body, allowedFields);
+      let userId: string | mongoose.Types.ObjectId =
+        new mongoose.Types.ObjectId(userDetail?._id); //For admin
+
+      if (role === "admin") {
+        // userId = req.body.userId; //For admin
+        if (req.body.userId === null) {
+          userId = userDetail?._id;
+        } else {
+          userId = req.body.userId;
+        }
+      }
+      const userUpdate = await User.findByIdAndUpdate(userId, updateData, {
+        new: true,
+      }).select("-password -emailVerificationToken");
+      if (userUpdate) {
+        return sendSuccess(
+          res,
+          CONSTANT_LIST.STATUS_SUCCESS,
+          CONSTANT_LIST.STATUS_CODE_OK,
+          "The user detail has been updated successfully,",
+          userUpdate
+        );
+      } else {
+        return sendError(
+          res,
+          CONSTANT_LIST.STATUS_ERROR,
+          CONSTANT_LIST.BAD_REQUEST,
+          "Sorry, the user detail can not be updated."
+        );
+      }
+
+      // const userDetail = await User.findById(user);
+      // if (!userDetail) {
+      //   return sendError(
+      //     res,
+      //     CONSTANT_LIST.STATUS_ERROR,
+      //     CONSTANT_LIST.BAD_REQUEST,
+      //     "No user found"
+      //   );
+      // }
+      // let userId: string | mongoose.Types.ObjectId =
+      //   new mongoose.Types.ObjectId(userDetail?._id);
+
+      // if (userDetail?.role === "admin") {
+      //   userId = user;
+      // }
     } catch (err: any) {
       console.log(err);
       return sendError(

@@ -79,9 +79,24 @@ export const allowedFieldsByRole = {
   user: ["title", "description"],
 };
 
+export const allowedFieldsByRoleForEmployee = {
+  admin: [
+    "firstName",
+    "lastName",
+    "email",
+    "userName",
+    "designation",
+    "role",
+    "joiningDate",
+    "contactNumber",
+    "department",
+  ],
+  user: ["firstName", "lastName", "contactNumber"],
+};
+
 export const filterFieldData = (data: any, allowedFields: string[]) => {
   let filteredData: any = {};
-  for (let key of data) {
+  for (let key of allowedFields) {
     if (data[key] !== undefined) {
       filteredData[key] = data[key];
     }
@@ -92,3 +107,11 @@ export const filterFieldData = (data: any, allowedFields: string[]) => {
 export const generateEmailVerificationToken = (): string => {
   return crypto.randomBytes(32).toString("hex");
 };
+
+export interface SearchBody {
+  page: number;
+  limit: number;
+  sortBy: string;
+  sortOrder: string;
+  search: string;
+}

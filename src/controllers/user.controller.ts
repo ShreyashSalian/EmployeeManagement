@@ -19,6 +19,7 @@ import { verifyUser } from "../middlewares/auth.middleware";
 import { verifyEmail } from "../utils/sendMail";
 import { UserBody } from "../helpers/user.helper";
 import mongoose from "mongoose";
+import { UserDetail } from "../models/userDetail.model";
 
 interface CustomRequest extends express.Request {
   files?: {
@@ -123,15 +124,19 @@ export const addNewUser = asycHandler(
         userName,
         email,
         password,
+        role,
+        contactNumber,
+        emailVerificationToken: emailVerificationToken,
+      });
+
+      const userDetail = await UserDetail.create({
+        userId: userCreation?._id,
         profileImage, // singular
         proofPhoto: proofImagesList,
-        role,
         designation,
         salary,
         joiningDate,
-        contactNumber,
         department,
-        emailVerificationToken: emailVerificationToken,
       });
 
       const userCreated = await User.findById(userCreation?._id).select(
@@ -162,7 +167,7 @@ export const deleteMultipleProofImages = asycHandler(
           "Please enter the image that you want to delete."
         );
       }
-      const user = await User.findById(userId);
+      const user = await UserDetail.findOne({ userId: userId });
       if (!user) {
         return sendError(
           res,

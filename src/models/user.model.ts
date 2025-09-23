@@ -9,12 +9,7 @@ interface UserDocument extends Document {
   userName: string;
   email: string;
   password: string;
-  profileImage: string;
-  proofPhoto: string[];
   role: string;
-  designation: string;
-  salary: number;
-  joiningDate: Date;
   refreshToken?: string;
   resetPasswordToken?: string;
   resetPasswordTokenExpiry?: Date;
@@ -22,9 +17,8 @@ interface UserDocument extends Document {
   emailVerificationToken: string | null;
   isDeleted: boolean;
   contactNumber: string;
-  department: Types.ObjectId;
-  createdAt: Date;
   updatedAt: Date;
+  createdAt: Date;
   comparePassword(password: string): Promise<boolean>;
   generateAccessToken(): string;
   generateRefreshToken(): string;
@@ -62,16 +56,7 @@ const userSchema = new Schema<UserDocument>(
       type: String,
       required: true,
     },
-    profileImage: {
-      type: String,
-      // required: true,
-    },
-    salary: {
-      type: Number,
-    },
-    joiningDate: {
-      type: Date,
-    },
+
     refreshToken: {
       type: String,
     },
@@ -94,11 +79,6 @@ const userSchema = new Schema<UserDocument>(
       enum: Object.values(UserRole),
       default: UserRole.USER,
     },
-    proofPhoto: [
-      {
-        type: String,
-      },
-    ],
     isDeleted: {
       type: Boolean,
       default: false,
@@ -106,13 +86,6 @@ const userSchema = new Schema<UserDocument>(
     contactNumber: {
       type: String,
       required: true,
-    },
-    designation: {
-      type: String,
-    },
-    department: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Department",
     },
   },
   {

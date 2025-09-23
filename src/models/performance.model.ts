@@ -3,6 +3,7 @@ import mongoose, { Types, Document, Schema } from "mongoose";
 interface PerformanceDocument extends Document {
   _id: string;
   employee: Types.ObjectId;
+  projectId: Types.ObjectId;
   reviewDate: Date;
   rating: Number;
   reviewer: Types.ObjectId;
@@ -18,6 +19,10 @@ const performanceSchema = new Schema<PerformanceDocument>({
   },
   reviewDate: {
     type: Date,
+  },
+  projectId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Project",
   },
   rating: {
     type: Number,

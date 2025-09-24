@@ -30,8 +30,9 @@ interface CustomRequest extends express.Request {
 export const getLoginUserDetail = asycHandler(
   async (req: express.Request, res: express.Response) => {
     try {
-      const user = req.user?.userId;
-      if (!user) {
+      const userId = req.user?.userId;
+      console.log(userId);
+      if (!userId) {
         return sendError(
           res,
           CONSTANT_LIST.STATUS_ERROR,
@@ -39,16 +40,39 @@ export const getLoginUserDetail = asycHandler(
           "No user found"
         );
       }
-      const userDetail = await User.findById(user).select("-password");
-      if (userDetail) {
-        return sendSuccess(
-          res,
-          CONSTANT_LIST.STATUS_SUCCESS,
-          CONSTANT_LIST.STATUS_CODE_OK,
-          "Login user detail",
-          userDetail
-        );
-      } else {
+
+      const userDetail = await User.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(userId),
+          },
+        },
+        {
+          $lookup: {
+            from: "userdetails", // collection name of UserDetail
+            localField: "_id",
+            foreignField: "userId",
+            as: "userDetails",
+          },
+        },
+        {
+          $unwind: {
+            path: "$userDetails",
+            preserveNullAndEmptyArrays: true, // in case userDetails is missing
+          },
+        },
+        {
+          $project: {
+            password: 0,
+            refreshToken: 0,
+            resetPasswordToken: 0,
+            resetPasswordTokenExpiry: 0,
+            emailVerificationToken: 0,
+          },
+        },
+      ]);
+
+      if (!userDetail || userDetail.length === 0) {
         return sendError(
           res,
           CONSTANT_LIST.STATUS_ERROR,
@@ -56,8 +80,16 @@ export const getLoginUserDetail = asycHandler(
           "Sorry, no user found"
         );
       }
+
+      return sendSuccess(
+        res,
+        CONSTANT_LIST.STATUS_SUCCESS,
+        CONSTANT_LIST.STATUS_CODE_OK,
+        "Login user detail",
+        userDetail[0] // send single object instead of array
+      );
     } catch (err: any) {
-      console.log(err);
+      console.error(err);
       return sendError(
         res,
         CONSTANT_LIST.STATUS_ERROR,

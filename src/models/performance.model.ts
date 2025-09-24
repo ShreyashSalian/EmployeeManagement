@@ -5,11 +5,13 @@ interface PerformanceDocument extends Document {
   employee: Types.ObjectId;
   projectId: Types.ObjectId;
   reviewDate: Date;
-  rating: Number;
+  rating: number;
   reviewer: Types.ObjectId;
   comments: string;
   goalsAchieved: string;
   goalsPending: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const performanceSchema = new Schema<PerformanceDocument>({
@@ -42,7 +44,7 @@ const performanceSchema = new Schema<PerformanceDocument>({
   },
 });
 
-export const Performace = mongoose.model<PerformanceDocument>(
+export const PerformaceModel = mongoose.model<PerformanceDocument>(
   "Performace",
   performanceSchema
 );

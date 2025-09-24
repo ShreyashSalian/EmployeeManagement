@@ -19,6 +19,7 @@ enum PROJECTENUM {
   PENDING = "pending",
   ONGOING = "ongoing",
   COMPLETED = "completed",
+  MISSED = "missed",
 }
 
 const projectSchema = new Schema<ProjectDocument>(

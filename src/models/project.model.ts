@@ -15,7 +15,7 @@ interface ProjectDocument extends Document {
   updatedAt: Date;
 }
 
-enum PROJECTENUM {
+export enum PROJECTENUM {
   PENDING = "pending",
   ONGOING = "ongoing",
   COMPLETED = "completed",

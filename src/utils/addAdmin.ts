@@ -24,6 +24,7 @@ export const addAdminFromList = async (): Promise<void> => {
           role: user.role,
           contactNumber: user.contactNumber,
           password: user.password,
+          isEmailVerified: true,
           designation: user.designation,
         });
         console.log(

@@ -127,7 +127,7 @@ userSchema.methods.generateAccessToken = function (): string {
     },
     token,
     {
-      expiresIn: "1h",
+      expiresIn: "5h",
     }
   );
 };

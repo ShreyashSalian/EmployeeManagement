@@ -1,6 +1,7 @@
 import { AnyARecord } from "dns";
 import express from "express";
 import crypto from "crypto";
+import { Project } from "../models/project.model";
 
 export function asycHandler<
   P = {},
@@ -115,3 +116,14 @@ export interface SearchBody {
   sortOrder: string;
   search: string;
 }
+
+export const generateProjectCode = async (): Promise<string> => {
+  const lastProject = await Project.findOne().sort({ createdAt: -1 });
+  let nextNumber = 1;
+  if (lastProject && lastProject.projectCode) {
+    const lastNumber = parseInt(lastProject.projectCode.split("-")[1], 10);
+    nextNumber = lastNumber + 1;
+  }
+  const formmattedNumber = String(nextNumber).padStart(3, "0");
+  return `mt-${formmattedNumber}`;
+};

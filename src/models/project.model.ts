@@ -3,6 +3,7 @@ import mongoose, { Types, Document, Schema } from "mongoose";
 interface ProjectDocument extends Document {
   _id: string;
   title: string;
+  projectCode: string;
   description: string;
   startDate: Date;
   endDate: Date;
@@ -23,6 +24,10 @@ enum PROJECTENUM {
 const projectSchema = new Schema<ProjectDocument>(
   {
     title: {
+      type: String,
+      required: true,
+    },
+    projectCode: {
       type: String,
       required: true,
     },

@@ -4,6 +4,7 @@ import { departmentValidation } from "../validation/department.validation";
 import {
   addNewDepartment,
   deleteDepartment,
+  getDepartmentById,
   listAllDepartment,
   softDeleteDepartment,
   updateDepartment,
@@ -43,6 +44,12 @@ departmentRouter.delete(
   verifyUser,
   checkAdmin,
   deleteDepartment
+);
+departmentRouter.get(
+  "/:departmentId",
+  verifyUser,
+  checkAdmin,
+  getDepartmentById
 );
 
 export default departmentRouter;

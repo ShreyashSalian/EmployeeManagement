@@ -70,6 +70,20 @@ export const updateDepartment = asycHandler(
     try {
       const departmentId = req.params.departmentId;
       const { name, description, manager } = req.body;
+      const alreadyExist = await Department.findOne({
+        name: name,
+        _id: {
+          $ne: departmentId,
+        },
+      });
+      if (alreadyExist) {
+        return sendError(
+          res,
+          CONSTANT_LIST.STATUS_ERROR,
+          CONSTANT_LIST.BAD_REQUEST,
+          "The department already added with given name"
+        );
+      }
       const updateDepartment = await Department.findByIdAndUpdate(
         departmentId,
         {
@@ -78,6 +92,9 @@ export const updateDepartment = asycHandler(
             description,
             manager,
           },
+        },
+        {
+          new: true,
         }
       );
       if (updateDepartment) {
@@ -239,17 +256,42 @@ export const listAllDepartment = asycHandler(
       const [departmentDetail, totalDepartment] = await Promise.all([
         Department.aggregate([
           { $match: matchStage },
+          {
+            $lookup: {
+              from: "users",
+              localField: "manager",
+              foreignField: "_id",
+              as: "mangerDetail",
+              pipeline: [
+                {
+                  $project: {
+                    firstName: 1,
+                    lastName: 1,
+                    userName: 1,
+                    email: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              mangerDetail: {
+                $first: "$mangerDetail",
+              },
+            },
+          },
           { $sort: { [sortBy]: sortOrder } },
           { $skip: skip },
           { $limit: limit },
         ]),
         Department.countDocuments(matchStage),
       ]);
-      if (departmentDetail) {
+      if (departmentDetail.length === 0) {
         return sendError(
           res,
           CONSTANT_LIST.STATUS_ERROR,
-          CONSTANT_LIST.BAD_REQUEST,
+          CONSTANT_LIST.NO_USER_FOUND,
           "There is no department."
         );
       }
@@ -270,6 +312,68 @@ export const listAllDepartment = asycHandler(
         "The department list",
         responsePayload
       );
+    } catch (err: any) {
+      console.log(err);
+      return sendError(
+        res,
+        CONSTANT_LIST.STATUS_ERROR,
+        CONSTANT_LIST.INTERNAL_SERVER_ERROR,
+        CONSTANT_LIST.INTERNAL_SERVER_ERROR_MESSAGE
+      );
+    }
+  }
+);
+
+export const getDepartmentById = asycHandler(
+  async (
+    req: express.Request<{ departmentId: string }, {}, {}>,
+    res: express.Response
+  ): Promise<express.Response> => {
+    try {
+      const departmentId = req.params.departmentId;
+      const departmentDetail = await Department.aggregate([
+        {
+          $lookup: {
+            from: "users",
+            localField: "manager",
+            foreignField: "_id",
+            as: "mangerDetail",
+            pipeline: [
+              {
+                $project: {
+                  firstName: 1,
+                  lastName: 1,
+                  userName: 1,
+                  email: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $addFields: {
+            mangerDetail: {
+              $first: "$mangerDetail",
+            },
+          },
+        },
+      ]);
+      if (departmentDetail) {
+        return sendSuccess(
+          res,
+          CONSTANT_LIST.STATUS_SUCCESS,
+          CONSTANT_LIST.STATUS_CODE_OK,
+          "The department detail",
+          departmentDetail
+        );
+      } else {
+        return sendError(
+          res,
+          CONSTANT_LIST.STATUS_ERROR,
+          CONSTANT_LIST.BAD_REQUEST,
+          "Sorry, no department found"
+        );
+      }
     } catch (err: any) {
       console.log(err);
       return sendError(
